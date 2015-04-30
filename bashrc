@@ -11,8 +11,16 @@ command_not_found_handle () {
 	echo "$0: $1: command not found"
 	return
     fi
-    docker run -ti -u $(whoami) -w "$HOME" \
+    # If we are somewhere within our home, go there.
+    if echo $PWD | grep -q ^/home
+    then
+	WORKDIR=$PWD
+    else
+	WORKDIR=/home
+    fi
+    docker run -it -P -u $(whoami) -w "$WORKDIR" \
 	$(env | cut -d= -f1 | awk '{print "-e", $1}') \
+	--device /dev/kvm:/dev/kvm \
 	-v /dev/snd:/dev/snd \
 	-v /etc/passwd:/etc/passwd:ro \
 	-v /etc/group:/etc/group:ro \
